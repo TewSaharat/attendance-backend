@@ -11,11 +11,16 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    protected $fillable = ['name','email','password','role'];
+    protected $fillable = ['name','email','password','role','department'];
     protected $hidden = ['password'];
 
     public function attendance(){
         return $this->hasMany(Attendance::class);
+    }
+
+    // ความสัมพันธ์ leaveRights (สิทธิการลาแต่ละ user)
+    public function leaveRights() {
+        return $this->hasOne(LeaveRight::class, 'user_id');
     }
 
     public function leaveRequests(){

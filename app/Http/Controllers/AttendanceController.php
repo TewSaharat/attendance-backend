@@ -36,5 +36,6 @@ class AttendanceController extends Controller
         $attendance->check_out = now();
         $attendance->save();
         return response()->json($attendance);
+        //
     }
 }

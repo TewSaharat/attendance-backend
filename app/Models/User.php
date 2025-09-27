@@ -23,7 +23,7 @@ class User extends Authenticatable implements JWTSubject
 
     protected $hidden = ['password'];
 
-   // app/Models/User.php
+ // app/Models/User.php
     public function profile() {
     return $this->hasOne(Profile::class);
     }

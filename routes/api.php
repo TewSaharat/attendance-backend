@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\LeaveController;
+use Illuminate\Http\Request;
+use App\Http\Controllers\LeaveTypeController;
 
 // Auth
 Route::post('signup', [AuthController::class, 'signup']);
@@ -15,10 +17,12 @@ Route::post('/login', [AuthController::class, 'login']);
 // routes ที่ต้อง login (JWT) ถึงเข้าถึงได้
 Route::middleware('auth:api')->group(function () {
     Route::post('logout', [AuthController::class, 'logout']);
-    Route::get('/me', function() {
-        return auth()->user();
-    });
-    Route::put('/me', [AuthController::class, 'updateProfile']);
+   Route::middleware('auth:api')->get('/me', function(Request $request) {
+    $user = $request->user()->load('profile'); // ใช้ $request->user()
+    return response()->json($user);
+});
+    Route::post('/updateprofile', [AuthController::class, 'updateProfile']);
+    
 });
 // Attendance
 Route::post('attendance/check-in', [AttendanceController::class, 'checkIn'])->middleware('auth:sanctum');
@@ -31,13 +35,34 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 
-// Leave
-Route::get('leaves', [LeaveController::class, 'index'])->middleware('auth:sanctum');
-Route::post('leaves', [LeaveController::class, 'store'])->middleware('auth:sanctum');
-Route::get('leaves/{id}', [LeaveController::class, 'show'])->middleware('auth:sanctum');
-Route::put('leaves/{id}', [LeaveController::class, 'update'])->middleware('auth:sanctum');
-Route::delete('leaves/{id}', [LeaveController::class, 'destroy'])->middleware('auth:sanctum');
-Route::post('leaves/{id}/approve', [LeaveController::class, 'approve'])->middleware('auth:sanctum');
-Route::post('leaves/{id}/reject', [LeaveController::class, 'reject'])->middleware('auth:sanctum');
+// ================= LEAVE REQUESTS ================= //
+Route::middleware('auth:api')->prefix('leaves')->group(function () {
+    Route::post('/', [LeaveController::class, 'submitLeave']); // ส่งใบลา
+    Route::get('{id}', [LeaveController::class, 'show']);      
+    Route::delete('{id}', [LeaveController::class, 'destroy']);
+    Route::put('{id}/updateLeave', [LeaveController::class, 'updateLeave']);
+   
+
+    // อนุมัติ / ปฏิเสธ
+Route::post('{id}/approve', [LeaveController::class, 'updateApproval'])
+    ->middleware(\App\Http\Middleware\LeaveApprovalRole::class);
+
+});
+
+Route::get('/leave-types', [LeaveTypeController::class, 'index']);
+
+Route::middleware('auth:api')->get('/my-leaves', [LeaveController::class, 'myLeaves']);
+
+Route::middleware('auth:api')->prefix('api')->group(function () {
+    Route::get('leaves/allLeaves', [LeaveController::class, 'allLeaves']);
+});
 
 
+Route::get('/api/files/{id}', function ($id) {
+    $filePath = storage_path("app/files/{$id}.pdf");
+    
+    if (!file_exists($filePath)) {
+        abort(404);
+    }
+    return response()->file($filePath); 
+});

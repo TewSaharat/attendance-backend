@@ -6,8 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class LeaveType extends Model
 {
-    protected $fillable = ['name', 'description'];
-
+   protected $table = 'leave_types';
+    protected $fillable = ['name']; // ปรับตาม field จริง
+    
     public function leaveRequests() {
         return $this->hasMany(LeaveRequest::class);
     }

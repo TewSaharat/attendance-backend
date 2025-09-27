@@ -83,11 +83,34 @@ class AuthController extends Controller
     }
 
     // Current user
-    public function me()
-    {
-        $user = auth()->user()->load('profile');
-        return response()->json($user);
+public function me(Request $request)
+{
+    $user = $request->user()->load('profile'); // โหลด relation profile ด้วย
+
+    $profile = $user->profile;
+    $profile_image_url = null;
+
+    if ($profile && $profile->profile_image) {
+        $profile_image_url = 'data:' . $profile->profile_image_mime . ';base64,' . $profile->profile_image;
     }
+
+    return response()->json([
+        'id' => $user->id,
+        'name' => $user->name,
+        'username' => $user->username,
+        'email' => $user->email,
+        'department' => $user->department,
+        'role' => $user->role,
+        'Category_code' => $user->Category_code,
+        'created_at' => $user->created_at,
+        'updated_at' => $user->updated_at,
+
+        // เพิ่ม profile image url
+        'profile_image_url' => $profile_image_url,
+    ]);
+}
+
+
 
     // Update profile
 public function updateProfile(Request $request)
